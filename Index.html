@@ -1,0 +1,1073 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#020503">
+<title>ASCENSION ENGINE</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=VT323&display=swap');
+
+:root {
+  --bg: #020503;
+  --panel-bg: #050b06;
+  --green: #5FFF8F;
+  --green-dim: #3a7a52;
+  --amber: #FFD35F;
+  --red: #FF5F5F;
+  --purple: #C78FFF;
+  --blue: #5FD3FF;
+  --mono: 'Share Tech Mono', monospace;
+  --display: 'VT323', monospace;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+html, body {
+  background: var(--bg);
+  color: var(--green);
+  font-family: var(--mono);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background: repeating-linear-gradient(0deg, rgba(0,0,0,0.15) 0px, rgba(0,0,0,0.15) 1px, transparent 1px, transparent 3px);
+  pointer-events: none;
+  z-index: 9999;
+  opacity: 0.5;
+}
+
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background: radial-gradient(ellipse at center, transparent 50%, rgba(0,0,0,0.4) 100%);
+  pointer-events: none;
+  z-index: 9998;
+}
+
+#boot-screen {
+  position: fixed;
+  inset: 0;
+  background: var(--bg);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+
+#boot-text {
+  font-family: var(--mono);
+  font-size: 13px;
+  line-height: 1.8;
+  color: var(--green);
+  white-space: pre-wrap;
+  max-width: 480px;
+  text-shadow: 0 0 8px rgba(95,255,143,0.6);
+}
+
+.boot-cursor {
+  display: inline-block;
+  width: 8px;
+  height: 14px;
+  background: var(--green);
+  animation: blink 0.8s step-end infinite;
+  vertical-align: middle;
+  margin-left: 2px;
+}
+
+@keyframes blink { 50% { opacity: 0; } }
+
+#boot-screen.hidden { display: none; }
+
+#main-app {
+  display: none;
+  max-width: 480px;
+  margin: 0 auto;
+  min-height: 100vh;
+  padding-bottom: 70px;
+}
+
+#main-app.visible { display: block; }
+
+.topbar {
+  padding: 16px 16px 12px;
+  border-bottom: 1px solid var(--green-dim);
+  background: linear-gradient(to bottom, rgba(95,255,143,0.04), transparent);
+}
+
+.topbar-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 4px;
+}
+
+#character-title {
+  font-family: var(--display);
+  font-size: 22px;
+  letter-spacing: 2px;
+  color: var(--amber);
+}
+
+.topbar-stats {
+  display: flex;
+  gap: 16px;
+  font-size: 11px;
+  margin-top: 6px;
+}
+
+.topbar-stat-label { color: var(--green-dim); }
+.topbar-stat-val { color: var(--green); font-family: var(--display); font-size: 16px; }
+
+.tab-row {
+  display: flex;
+  overflow-x: auto;
+  border-bottom: 1px solid var(--green-dim);
+  scrollbar-width: none;
+}
+.tab-row::-webkit-scrollbar { display: none; }
+
+.tab-btn {
+  flex-shrink: 0;
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  color: var(--green-dim);
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  padding: 12px 14px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.2s;
+}
+
+.tab-btn.active {
+  color: var(--green);
+  border-bottom-color: var(--green);
+  text-shadow: 0 0 6px rgba(95,255,143,0.6);
+}
+
+#content { padding: 16px; }
+
+.panel { display: none; }
+.panel.active { display: block; animation: fadeIn 0.3s ease; }
+
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+.section-header {
+  font-family: var(--display);
+  font-size: 26px;
+  letter-spacing: 1px;
+  margin-bottom: 2px;
+}
+
+.section-sub {
+  font-size: 10px;
+  color: var(--green-dim);
+  letter-spacing: 1px;
+  margin-bottom: 16px;
+}
+
+.glow { text-shadow: 0 0 8px rgba(95,255,143,0.6); }
+.glow-amber { color: var(--amber); text-shadow: 0 0 8px rgba(255,211,95,0.6); }
+.glow-red { color: var(--red); text-shadow: 0 0 8px rgba(255,95,95,0.6); }
+.glow-purple { color: var(--purple); text-shadow: 0 0 8px rgba(199,143,255,0.6); }
+
+.box {
+  border: 1px solid var(--green-dim);
+  background: var(--panel-bg);
+  padding: 14px;
+  margin-bottom: 12px;
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+.box-title {
+  font-size: 11px;
+  letter-spacing: 1px;
+  color: var(--green-dim);
+  text-transform: uppercase;
+  margin-bottom: 10px;
+}
+
+.mb-8 { margin-bottom: 8px; }
+.mb-16 { margin-bottom: 16px; }
+.mt-16 { margin-top: 16px; }
+
+.btn {
+  background: transparent;
+  border: 1px solid var(--green-dim);
+  color: var(--green);
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 1px;
+  padding: 10px 16px;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-transform: uppercase;
+}
+
+.btn:hover, .btn:active {
+  border-color: var(--green);
+  background: rgba(95,255,143,0.08);
+  box-shadow: 0 0 10px rgba(95,255,143,0.2);
+}
+
+.btn-block { display: block; width: 100%; }
+
+input[type="text"], input[type="password"], textarea {
+  width: 100%;
+  background: var(--bg);
+  border: 1px solid var(--green-dim);
+  color: var(--green);
+  font-family: var(--mono);
+  font-size: 12px;
+  padding: 10px;
+  outline: none;
+}
+input:focus, textarea:focus { border-color: var(--green); }
+
+input[type="range"] {
+  width: 100%;
+  -webkit-appearance: none;
+  height: 4px;
+  background: var(--green-dim);
+  outline: none;
+}
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--green);
+  cursor: pointer;
+  box-shadow: 0 0 8px rgba(95,255,143,0.6);
+}
+
+.slider-row { margin-bottom: 4px; }
+.slider-label {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  margin-bottom: 10px;
+}
+
+.flex-between {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.label-small {
+  font-size: 9px;
+  letter-spacing: 1px;
+  color: var(--green-dim);
+  text-transform: uppercase;
+  margin-bottom: 4px;
+}
+
+.quest-card {
+  display: flex;
+  align-items: center;
+  border: 1px solid var(--green-dim);
+  padding: 12px;
+  margin-bottom: 8px;
+  background: var(--panel-bg);
+  transition: all 0.2s;
+}
+
+.quest-card.completed {
+  opacity: 0.5;
+  border-color: var(--green);
+}
+
+.quest-checkbox {
+  width: 20px;
+  height: 20px;
+  border: 1px solid var(--green-dim);
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 12px;
+  color: var(--green);
+}
+
+.quest-name { font-size: 12px; }
+.quest-xp { font-size: 10px; color: var(--amber); flex-shrink: 0; }
+
+.attr-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 0;
+  border-bottom: 1px solid rgba(95,255,143,0.1);
+  cursor: pointer;
+}
+.attr-row:last-child { border-bottom: none; }
+
+.attr-name {
+  font-size: 11px;
+  width: 90px;
+  flex-shrink: 0;
+}
+
+.attr-bar-track {
+  flex: 1;
+  height: 8px;
+  background: rgba(95,255,143,0.1);
+  position: relative;
+}
+
+.attr-bar-fill {
+  height: 100%;
+  transition: width 0.4s ease;
+}
+
+.attr-level {
+  font-size: 10px;
+  color: var(--green-dim);
+  width: 50px;
+  text-align: right;
+  flex-shrink: 0;
+}
+
+.boss-card {
+  border: 1px solid var(--red);
+  background: rgba(255,95,95,0.05);
+  padding: 14px;
+  margin-bottom: 12px;
+}
+
+.boss-hp-track {
+  height: 10px;
+  background: rgba(255,95,95,0.15);
+  margin: 10px 0 14px;
+}
+
+.boss-hp-fill {
+  height: 100%;
+  background: var(--red);
+  transition: width 0.4s ease;
+  box-shadow: 0 0 8px rgba(255,95,95,0.6);
+}
+
+.skill-node {
+  display: flex;
+  justify-content: space-between;
+  padding: 8px 0;
+  border-bottom: 1px solid rgba(95,255,143,0.1);
+  font-size: 12px;
+}
+.skill-node:last-child { border-bottom: none; }
+.skill-node.unlocked { color: var(--green); }
+.skill-node.locked { color: var(--green-dim); }
+
+.achievement {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  border: 1px solid var(--green-dim);
+  padding: 12px;
+  margin-bottom: 8px;
+}
+.achievement.unlocked { border-color: var(--amber); background: rgba(255,211,95,0.05); }
+.achievement.locked { opacity: 0.4; }
+.achievement-icon { font-size: 20px; flex-shrink: 0; }
+
+#modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.85);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 500;
+  padding: 20px;
+}
+#modal-overlay.visible { display: flex; }
+
+#modal-box {
+  background: var(--panel-bg);
+  border: 1px solid var(--green);
+  box-shadow: 0 0 30px rgba(95,255,143,0.3);
+  padding: 20px;
+  max-width: 380px;
+  width: 100%;
+  max-height: 80vh;
+  overflow-y: auto;
+}
+</style>
+</head>
+<body>
+
+<div id="boot-screen">
+  <div id="boot-text"></div>
+</div>
+
+<div id="main-app">
+  <div class="topbar">
+    <div class="topbar-row">
+      <div id="character-title">WANDERER</div>
+      <div id="overall-level" style="font-family:var(--display);font-size:20px;color:var(--green);">0</div>
+    </div>
+    <div class="topbar-stats">
+      <div><span class="topbar-stat-label">LIFE OS </span><span id="lifeos-score" class="topbar-stat-val">0</span></div>
+    </div>
+  </div>
+
+  <div class="tab-row">
+    <button class="tab-btn active" data-tab="checkin">Check-In</button>
+    <button class="tab-btn" data-tab="sheet">Sheet</button>
+    <button class="tab-btn" data-tab="quests">Quests</button>
+    <button class="tab-btn" data-tab="bosses">Bosses</button>
+    <button class="tab-btn" data-tab="skills">Skills</button>
+    <button class="tab-btn" data-tab="shadow">Shadow</button>
+    <button class="tab-btn" data-tab="map">Map</button>
+    <button class="tab-btn" data-tab="destiny">Destiny</button>
+    <button class="tab-btn" data-tab="future">Future</button>
+    <button class="tab-btn" data-tab="trends">Trends</button>
+    <button class="tab-btn" data-tab="achievements">Awards</button>
+    <button class="tab-btn" data-tab="settings">Settings</button>
+  </div>
+
+  <div id="content"></div>
+</div>
+
+<div id="modal-overlay">
+  <div id="modal-box"></div>
+</div>
+
+<script>
+const LAYERS = {
+  physical: { name: 'PHYSICAL BODY', code: 'PHY', color: '#5FFF8F', substats: ['Strength','Endurance','Mobility','Recovery','Sleep','Nutrition','Energy'] },
+  mind: { name: 'MIND', code: 'MND', color: '#5FD3FF', substats: ['Focus','Learning','Creativity','Intelligence','Memory','Decision Making'] },
+  emotions: { name: 'EMOTIONS', code: 'EMO', color: '#FFD35F', substats: ['Stability','Confidence','Courage','Resilience','Optimism','Stress Tolerance'] },
+  relationships: { name: 'RELATIONSHIPS', code: 'REL', color: '#FF8F5F', substats: ['Family','Friendships','Romance','Community','Leadership'] },
+  purpose: { name: 'PURPOSE', code: 'PUR', color: '#C78FFF', substats: ['Meaning','Faith','Mission','Identity','Values Alignment'] },
+};
+
+const ATTRIBUTES = {
+  intellect: { name: 'INTELLECT', layer: 'mind', color: '#5FD3FF', substats: ['Knowledge','Focus','Memory','Curiosity','Learning Velocity'], shadow: { traits: ['Overthinking','Analysis paralysis','Perfectionism'], threshold: 70 } },
+  vitality: { name: 'VITALITY', layer: 'physical', color: '#5FFF8F', substats: ['Sleep','Nutrition','Strength','Cardio','Recovery','Hydration'], shadow: { traits: ['Body obsession','Overtraining','Orthorexia tendencies'], threshold: 70 } },
+  discipline: { name: 'DISCIPLINE', layer: 'mind', color: '#FFD35F', substats: ['Consistency','Habit Adherence','Goal Completion','Time Management'], shadow: { traits: ['Rigidity','Burnout','Obsession','Inability to rest'], threshold: 70 } },
+  resilience: { name: 'RESILIENCE', layer: 'emotions', color: '#FF8F5F', substats: ['Emotional Regulation','Stress Management','Setback Recovery','Persistence'], shadow: { traits: ['Emotional suppression','Toxic positivity','Avoidance'], threshold: 70 } },
+  spirit: { name: 'SPIRIT', layer: 'purpose', color: '#C78FFF', substats: ['Meaning','Purpose','Gratitude','Reflection','Values Alignment'], shadow: { traits: ['Spiritual escapism','Self-righteousness','Detachment from reality'], threshold: 70 } },
+  connection: { name: 'CONNECTION', layer: 'relationships', color: '#FF5FD3', substats: ['Family','Friendship','Community','Social Confidence'], shadow: { traits: ['People pleasing','Dependency','Loss of self in others'], threshold: 70 } },
+  adaptability: { name: 'ADAPTABILITY', layer: 'mind', color: '#8FFFD3', substats: ['Creativity','Flexibility','Novel Experience','Uncertainty Tolerance'], shadow: { traits: ['Scattered focus','Inability to commit','Restlessness'], threshold: 70 } },
+};
+
+const CLASSES = [
+  { id: 'scholar', name: 'Scholar', primary: 'intellect', desc: 'Mind sharpened like a blade.' },
+  { id: 'warrior', name: 'Warrior', primary: 'vitality', desc: 'Body as temple and weapon.' },
+  { id: 'monk', name: 'Monk', primary: 'spirit', desc: 'Stillness that moves mountains.' },
+  { id: 'architect', name: 'Architect', primary: 'discipline', desc: 'Builds what others abandon.' },
+  { id: 'guardian', name: 'Guardian', primary: 'connection', desc: 'Strength in service of others.' },
+  { id: 'explorer', name: 'Explorer', primary: 'adaptability', desc: 'Comfortable in the unknown.' },
+  { id: 'sovereign', name: 'Sovereign', primary: 'resilience', desc: 'Unbroken. Balanced. Elite.' },
+];
+
+const HYBRID_CLASSES = {
+  'scholar+warrior': 'Battle Sage', 'warrior+guardian': 'Shieldbearer', 'monk+architect': 'Sacred Builder',
+  'scholar+monk': 'Philosopher King', 'warrior+explorer': 'Wayfarer', 'guardian+monk': 'Sacred Protector',
+  'architect+scholar': 'Master Strategist', 'explorer+scholar': 'Pathfinder', 'sovereign+architect': 'The Sovereign Builder',
+};
+
+const SKILL_TREES = {
+  fitness: { name: 'Fitness Tree', attribute: 'vitality', nodes: [{id:'f1',name:'Beginner Strength',xpReq:0},{id:'f2',name:'Progressive Overload',xpReq:200},{id:'f3',name:'Training Periodization',xpReq:500},{id:'f4',name:'Athletic Performance',xpReq:1000},{id:'f5',name:'Elite Conditioning',xpReq:2000}] },
+  mind: { name: 'Mind Tree', attribute: 'intellect', nodes: [{id:'m1',name:'Reading',xpReq:0},{id:'m2',name:'Deep Work',xpReq:200},{id:'m3',name:'Systems Thinking',xpReq:500},{id:'m4',name:'Strategic Thinking',xpReq:1000},{id:'m5',name:'Mastery',xpReq:2000}] },
+  spirit: { name: 'Spirit Tree', attribute: 'spirit', nodes: [{id:'s1',name:'Daily Reflection',xpReq:0},{id:'s2',name:'Gratitude Practice',xpReq:200},{id:'s3',name:'Stillness',xpReq:500},{id:'s4',name:'Values Clarity',xpReq:1000},{id:'s5',name:'Integrated Purpose',xpReq:2000}] },
+  discipline: { name: 'Discipline Tree', attribute: 'discipline', nodes: [{id:'d1',name:'Daily Anchors',xpReq:0},{id:'d2',name:'Habit Stacking',xpReq:200},{id:'d3',name:'Systems Over Willpower',xpReq:500},{id:'d4',name:'Unbreakable Routine',xpReq:1000},{id:'d5',name:'Architect of Self',xpReq:2000}] },
+  connection: { name: 'Connection Tree', attribute: 'connection', nodes: [{id:'c1',name:'Showing Up',xpReq:0},{id:'c2',name:'Deep Listening',xpReq:200},{id:'c3',name:'Vulnerable Honesty',xpReq:500},{id:'c4',name:'Leadership Presence',xpReq:1000},{id:'c5',name:'Community Builder',xpReq:2000}] },
+  resilience: { name: 'Resilience Tree', attribute: 'resilience', nodes: [{id:'r1',name:'Noticing the Spiral',xpReq:0},{id:'r2',name:'Regulation Tools',xpReq:200},{id:'r3',name:'Setback Recovery',xpReq:500},{id:'r4',name:'Stress Inoculation',xpReq:1000},{id:'r5',name:'Unshakeable',xpReq:2000}] },
+  adaptability: { name: 'Adaptability Tree', attribute: 'adaptability', nodes: [{id:'a1',name:'Trying New Things',xpReq:0},{id:'a2',name:'Comfort with Discomfort',xpReq:200},{id:'a3',name:'Creative Problem Solving',xpReq:500},{id:'a4',name:'Antifragility',xpReq:1000},{id:'a5',name:'Master of Change',xpReq:2000}] },
+};
+
+const BOSS_TEMPLATES = {
+  sleepDebt: { id: 'sleepDebt', name: 'Sleep Debt', icon: '😴', maxHP: 100, trigger: (t) => t.sleepQualityAvg < 6 && t.sleepStreakPoor >= 3, damageActions: ['Sleep 7+ hours','Recovery day','Reduced caffeine','Earlier wind-down'] },
+  anxiety: { id: 'anxiety', name: 'Anxiety', icon: '⚡', maxHP: 250, trigger: (t) => t.emotionalAvg < 5 && t.stressStreak >= 4, damageActions: ['Reflection/journaling','Exercise','Breathing practice','Exposure action'] },
+  isolation: { id: 'isolation', name: 'Isolation', icon: '🌑', maxHP: 150, trigger: (t) => t.connectionStreakLow >= 5, damageActions: ['Reach out to someone','Deep conversation','Community activity'] },
+  stagnation: { id: 'stagnation', name: 'Cognitive Stagnation', icon: '🌀', maxHP: 120, trigger: (t) => t.learningStreakLow >= 5, damageActions: ['Read','Learn new skill','Deep work session'] },
+  burnout: { id: 'burnout', name: 'Burnout', icon: '🔥', maxHP: 300, trigger: (t) => t.disciplineAvg > 85 && t.recoveryAvg < 40, damageActions: ['Rest day (real rest)','Reduce commitments','Say no to something'] },
+};
+
+function calculateTitle(attrs) {
+  const sorted = Object.entries(attrs).sort((a,b)=>b[1].level-a[1].level);
+  const top = sorted[0][0];
+  const titleMap = { intellect:'The Scholar', vitality:'The Builder', discipline:'The Disciplined', resilience:'The Guardian', spirit:'The Pilgrim', connection:'The Connector', adaptability:'The Pathfinder' };
+  return titleMap[top] || 'The Wanderer';
+}
+
+const DESTINY_STAGES = [
+  { minLevel: 0, title: 'Lost Wanderer' }, { minLevel: 5, title: 'Awakening Seeker' },
+  { minLevel: 10, title: 'Disciplined Builder' }, { minLevel: 20, title: 'Resilient Leader' },
+  { minLevel: 35, title: 'Master Craftsman' }, { minLevel: 50, title: 'Sovereign' },
+];
+
+function calculateDestinyStage(overallLevel) {
+  let stage = DESTINY_STAGES[0];
+  for (const s of DESTINY_STAGES) { if (overallLevel >= s.minLevel) stage = s; }
+  return stage.title;
+}
+
+function xpToLevel(xp) { return Math.floor(Math.sqrt(xp / 10)); }
+function levelToXp(level) { return Math.pow(level, 2) * 10; }
+function xpProgress(xp) {
+  const level = xpToLevel(xp);
+  const currentLevelXp = levelToXp(level);
+  const nextLevelXp = levelToXp(level + 1);
+  const progress = (xp - currentLevelXp) / (nextLevelXp - currentLevelXp);
+  return { level, progress: Math.max(0, Math.min(1, progress)), currentLevelXp, nextLevelXp };
+}
+
+const ACHIEVEMENTS = [
+  { id: 'ironSleep', name: 'Iron Sleep', desc: '7 days of quality sleep', check: (s) => s.sleepStreak >= 7 },
+  { id: 'scholarsFlame', name: "Scholar's Flame", desc: '30 learning sessions', check: (s) => s.learningCount >= 30 },
+  { id: 'mountainMover', name: 'Mountain Mover', desc: 'Complete a major goal', check: (s) => s.majorGoalsCompleted >= 1 },
+  { id: 'unbroken', name: 'Unbroken', desc: '30-day consistency streak', check: (s) => s.consistencyStreak >= 30 },
+  { id: 'firstBlood', name: 'First Boss Defeated', desc: 'Defeat your first boss', check: (s) => s.bossesDefeated >= 1 },
+  { id: 'balanced', name: 'The Balanced One', desc: 'All attributes above level 10', check: (s) => s.allAttrsAboveTen },
+];
+
+function calculateLifeOS(attrs) {
+  const levels = Object.values(attrs).map(a => a.level);
+  const avgLevel = levels.reduce((a,b)=>a+b,0) / levels.length;
+  const variance = levels.reduce((sum,l)=>sum+Math.pow(l-avgLevel,2),0) / levels.length;
+  const stdDev = Math.sqrt(variance);
+  const balancePenalty = stdDev * 8;
+  const rawScore = avgLevel * 10 - balancePenalty;
+  return Math.max(0, Math.round(rawScore));
+}
+
+let STATE = {
+  apiKey: '', attrs: {}, quests: { main: null, side: [], date: null }, checkins: [], bosses: [],
+  bossesDefeated: 0, achievements: [], skillUnlocks: {}, history: [], consistencyStreak: 0,
+  sleepStreak: 0, learningCount: 0, majorGoalsCompleted: 0, lastCheckinDate: null, companionMemory: [],
+};
+
+function initAttrs() {
+  const attrs = {};
+  Object.keys(ATTRIBUTES).forEach(key => { attrs[key] = { xp: 0, level: 0 }; });
+  return attrs;
+}
+
+const STORAGE_KEY = 'ascension_engine_state_v1';
+
+function saveState() { try { localStorage.setItem(STORAGE_KEY, JSON.stringify(STATE)); } catch (e) { console.warn('Save failed', e); } }
+function loadState() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) { STATE = { ...STATE, ...JSON.parse(raw) }; return true; }
+  } catch (e) { console.warn('Load failed', e); }
+  return false;
+}
+function loadApiKey() { try { return localStorage.getItem('ascension_engine_api_key') || ''; } catch (e) { return ''; } }
+function saveApiKey(key) { try { localStorage.setItem('ascension_engine_api_key', key); } catch (e) {} }
+
+const BOOT_LINES = [
+  'ASCENSION ENGINE TERMINAL v2.7', 'COPYRIGHT 2287 ROBCO INDUSTRIES (UNLICENSED HOMAGE)', '',
+  'INITIALIZING CHARACTER MATRIX...', 'LOADING FIVE-LAYER HUMAN MODEL... OK', 'LOADING ATTRIBUTE ENGINE... OK',
+  'LOADING SHADOW DETECTION SUBSYSTEM... OK', 'LOADING BOSS ENCOUNTER ENGINE... OK',
+  'CALIBRATING DESTINY TRACKER... OK', 'ESTABLISHING COMPANION AI LINK...',
+];
+
+function runBootSequence(callback) {
+  const bootText = document.getElementById('boot-text');
+  let lineIndex = 0, charIndex = 0, displayed = '';
+  function typeLine() {
+    if (lineIndex >= BOOT_LINES.length) {
+      displayed += '\n> SYSTEM READY';
+      bootText.textContent = displayed;
+      setTimeout(() => {
+        document.getElementById('boot-screen').style.opacity = '0';
+        document.getElementById('boot-screen').style.transition = 'opacity 0.5s';
+        setTimeout(() => { document.getElementById('boot-screen').classList.add('hidden'); callback(); }, 500);
+      }, 600);
+      return;
+    }
+    const line = BOOT_LINES[lineIndex];
+    if (charIndex < line.length) {
+      displayed += line[charIndex];
+      bootText.innerHTML = displayed + '<span class="boot-cursor"></span>';
+      charIndex++;
+      setTimeout(typeLine, 8);
+    } else {
+      displayed += '\n'; charIndex = 0; lineIndex++;
+      setTimeout(typeLine, 60);
+    }
+  }
+  typeLine();
+}
+
+function setupTabs() {
+  document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+      btn.classList.add('active');
+      const tabId = btn.dataset.tab;
+      document.getElementById('panel-' + tabId).classList.add('active');
+      onTabActivated(tabId);
+    });
+  });
+}
+
+function onTabActivated(tabId) {
+  const renderers = {
+    checkin: renderCheckinPanel, sheet: renderCharacterSheet, quests: renderQuestsPanel, bosses: renderBossesPanel,
+    skills: renderSkillTreesPanel, shadow: renderShadowPanel, map: renderLifeMapPanel, destiny: renderDestinyPanel,
+    future: renderFutureSelfPanel, trends: renderTrendsPanel, achievements: renderAchievementsPanel, settings: renderSettingsPanel,
+  };
+  if (renderers[tabId]) renderers[tabId]();
+}
+
+function showModal(html) {
+  document.getElementById('modal-box').innerHTML = html;
+  document.getElementById('modal-overlay').classList.add('visible');
+}
+function closeModal() { document.getElementById('modal-overlay').classList.remove('visible'); }
+document.getElementById('modal-overlay').addEventListener('click', (e) => { if (e.target.id === 'modal-overlay') closeModal(); });
+
+function refreshTopbar() {
+  const lifeOS = calculateLifeOS(STATE.attrs);
+  document.getElementById('lifeos-score').textContent = lifeOS;
+  const totalXp = Object.values(STATE.attrs).reduce((sum, a) => sum + a.xp, 0);
+  const overallLevel = xpToLevel(totalXp / Object.keys(STATE.attrs).length * 7);
+  document.getElementById('overall-level').textContent = overallLevel;
+  document.getElementById('character-title').textContent = calculateTitle(STATE.attrs).toUpperCase();
+}
+
+function awardXP(attrKey, amount, reason) {
+  if (!STATE.attrs[attrKey]) STATE.attrs[attrKey] = { xp: 0, level: 0 };
+  STATE.attrs[attrKey].xp += amount;
+  const newLevel = xpToLevel(STATE.attrs[attrKey].xp);
+  const leveledUp = newLevel > STATE.attrs[attrKey].level;
+  STATE.attrs[attrKey].level = newLevel;
+  if (leveledUp) showLevelUpToast(attrKey, newLevel);
+  checkAchievements();
+  saveState();
+  refreshTopbar();
+  return leveledUp;
+}
+
+function showLevelUpToast(attrKey, level) {
+  const attr = ATTRIBUTES[attrKey];
+  const toast = document.createElement('div');
+  Object.assign(toast.style, { position:'fixed', top:'80px', right:'20px', border:`2px solid ${attr.color}`, background:'rgba(0,0,0,0.9)', color:attr.color, padding:'14px 20px', fontFamily:'var(--mono)', fontSize:'12px', zIndex:'300', boxShadow:`0 0 20px ${attr.color}66`, animation:'fadeIn 0.3s ease' });
+  toast.innerHTML = `<div style="font-family:var(--display);font-size:18px;">LEVEL UP</div>${attr.name} → LVL ${level}`;
+  document.body.appendChild(toast);
+  setTimeout(() => { toast.style.transition = 'opacity 0.5s'; toast.style.opacity = '0'; setTimeout(() => toast.remove(), 500); }, 2800);
+}
+
+function showAchievementToast(achievement) {
+  const toast = document.createElement('div');
+  Object.assign(toast.style, { position:'fixed', top:'80px', right:'20px', border:'2px solid #FFD35F', background:'rgba(0,0,0,0.9)', color:'#FFD35F', padding:'14px 20px', fontFamily:'var(--mono)', fontSize:'12px', zIndex:'300', boxShadow:'0 0 20px rgba(255,211,95,0.5)', animation:'fadeIn 0.3s ease' });
+  toast.innerHTML = `<div style="font-family:var(--display);font-size:18px;">🏆 ACHIEVEMENT UNLOCKED</div>${achievement.name}`;
+  document.body.appendChild(toast);
+  setTimeout(() => { toast.style.transition = 'opacity 0.5s'; toast.style.opacity = '0'; setTimeout(() => toast.remove(), 500); }, 2800);
+}
+
+function checkAchievements() {
+  const allAttrsAboveTen = Object.values(STATE.attrs).every(a => a.level >= 10);
+  const stats = { sleepStreak: STATE.sleepStreak, learningCount: STATE.learningCount, majorGoalsCompleted: STATE.majorGoalsCompleted, consistencyStreak: STATE.consistencyStreak, bossesDefeated: STATE.bossesDefeated, allAttrsAboveTen };
+  ACHIEVEMENTS.forEach(ach => {
+    if (!STATE.achievements.includes(ach.id) && ach.check(stats)) {
+      STATE.achievements.push(ach.id);
+      addLegendMoment(`Achievement unlocked: ${ach.name}`);
+      showAchievementToast(ach);
+    }
+  });
+}
+
+function addLegendMoment(text) { STATE.history.push({ date: new Date().toISOString(), text }); saveState(); }
+
+let checkinAnswers = {}, checkinStep = 0;
+const CHECKIN_QUESTIONS = [
+  { id: 'sleep', label: 'Hours of sleep last night', type: 'slider', min: 0, max: 10, step: 0.5, default: 7 },
+  { id: 'sleepQuality', label: 'Sleep quality', type: 'slider', min: 1, max: 10, default: 6 },
+  { id: 'energy', label: 'Energy level right now', type: 'slider', min: 1, max: 10, default: 6 },
+  { id: 'mental', label: 'Mental clarity / focus', type: 'slider', min: 1, max: 10, default: 6 },
+  { id: 'emotional', label: 'Emotional state (1=rough, 10=solid)', type: 'slider', min: 1, max: 10, default: 6 },
+  { id: 'exercised', label: 'Did you train/exercise yesterday?', type: 'bool' },
+  { id: 'learned', label: 'Did you spend time learning yesterday?', type: 'bool' },
+  { id: 'reflected', label: 'Did you reflect, pray, or practice gratitude?', type: 'bool' },
+  { id: 'connected', label: 'Meaningful social interaction yesterday?', type: 'bool' },
+  { id: 'challenge', label: 'What challenged you emotionally? (optional)', type: 'text' },
+  { id: 'priority', label: "Today's top priority", type: 'text' },
+];
+
+function renderCheckinPanel() {
+  const panel = document.getElementById('panel-checkin');
+  const today = new Date().toDateString();
+  const alreadyDone = STATE.lastCheckinDate === today;
+  if (alreadyDone) {
+    panel.innerHTML = `<div class="section-header glow">DAILY CHECK-IN</div><div class="section-sub">STATUS: COMPLETE FOR TODAY</div><div class="box"><div class="box-title">SYSTEM</div><div style="font-size:13px;line-height:1.7;">Check-in logged. Character sheet updated. Return tomorrow for the next interview — or review today's quests in the QUESTS tab.</div></div><button class="btn" onclick="resetTodayCheckin()">⟲ RE-RUN CHECK-IN (DEBUG)</button>`;
+    return;
+  }
+  checkinStep = 0; checkinAnswers = {};
+  panel.innerHTML = `<div class="section-header glow">MORNING INTERVIEW</div><div class="section-sub">ADAPTIVE ASSESSMENT — EST. 2-5 MINUTES</div><div id="checkin-container"></div>`;
+  renderCheckinStep();
+}
+
+function renderCheckinStep() {
+  const container = document.getElementById('checkin-container');
+  if (checkinStep >= CHECKIN_QUESTIONS.length) {
+    container.innerHTML = `<div class="box"><div class="box-title">PROCESSING</div><div id="checkin-processing" style="font-size:12px;">Analyzing responses against historical trends<span class="boot-cursor"></span></div></div>`;
+    processCheckin();
+    return;
+  }
+  const q = CHECKIN_QUESTIONS[checkinStep];
+  let inputHtml = '';
+  if (q.type === 'slider') {
+    const val = checkinAnswers[q.id] ?? q.default;
+    inputHtml = `<div class="slider-row"><div class="slider-label"><span>${q.label}</span><span id="slider-val" class="glow-amber">${val}</span></div><input type="range" min="${q.min}" max="${q.max}" step="${q.step||1}" value="${val}" oninput="document.getElementById('slider-val').textContent=this.value;checkinAnswers['${q.id}']=parseFloat(this.value);" /></div>`;
+  } else if (q.type === 'bool') {
+    inputHtml = `<div class="mb-16" style="font-size:13px;">${q.label}</div><div style="display:flex;gap:10px;"><button class="btn" style="flex:1;" onclick="checkinAnswers['${q.id}']=true;nextCheckinStep();">YES</button><button class="btn" style="flex:1;" onclick="checkinAnswers['${q.id}']=false;nextCheckinStep();">NO</button></div>`;
+  } else if (q.type === 'text') {
+    inputHtml = `<div class="mb-16" style="font-size:13px;">${q.label}</div><textarea id="checkin-text-input" rows="3" placeholder="Type here..."></textarea>`;
+  }
+  container.innerHTML = `<div class="box"><div class="box-title">QUESTION ${checkinStep+1} / ${CHECKIN_QUESTIONS.length}</div>${inputHtml}${q.type!=='bool'?`<button class="btn btn-block mt-16" onclick="submitCheckinStep('${q.id}','${q.type}')">CONTINUE →</button>`:''}</div>`;
+  if (q.type === 'slider' && !(q.id in checkinAnswers)) checkinAnswers[q.id] = q.default;
+}
+
+function submitCheckinStep(id, type) {
+  if (type === 'text') checkinAnswers[id] = document.getElementById('checkin-text-input').value || '';
+  nextCheckinStep();
+}
+function nextCheckinStep() { checkinStep++; renderCheckinStep(); }
+function resetTodayCheckin() { STATE.lastCheckinDate = null; saveState(); renderCheckinPanel(); }
+
+async function processCheckin() {
+  const a = checkinAnswers;
+  const today = new Date().toDateString();
+  if (a.sleepQuality >= 7) awardXP('vitality', 20, 'Quality sleep');
+  if (a.exercised) awardXP('vitality', 25, 'Training session');
+  if (a.learned) { awardXP('intellect', 15, 'Learning session'); STATE.learningCount++; }
+  if (a.reflected) awardXP('spirit', 10, 'Reflection/gratitude');
+  if (a.connected) awardXP('connection', 15, 'Social connection');
+  if (a.emotional >= 7) awardXP('resilience', 10, 'Emotional stability');
+  if (a.mental >= 7) awardXP('intellect', 5, 'Mental clarity');
+  STATE.sleepStreak = a.sleepQuality >= 6 ? STATE.sleepStreak + 1 : 0;
+  STATE.consistencyStreak = STATE.lastCheckinDate ? STATE.consistencyStreak + 1 : 1;
+  STATE.lastCheckinDate = today;
+  STATE.checkins.push({ date: today, ...a });
+  if (STATE.checkins.length > 90) STATE.checkins.shift();
+  generateDailyQuests(a);
+  checkBossTriggers();
+  saveState();
+  refreshTopbar();
+  const container = document.getElementById('checkin-container');
+  if (STATE.apiKey) {
+    try {
+      const analysis = await callCompanionAI(buildCheckinAnalysisPrompt(a));
+      container.innerHTML = `<div class="box" style="border-color:var(--amber);"><div class="box-title" style="color:var(--amber);">COMPANION AI — ANALYSIS</div><div style="font-size:13px;line-height:1.75;white-space:pre-wrap;">${escapeHtml(analysis)}</div></div><button class="btn btn-block mt-16" onclick="document.querySelector('[data-tab=quests]').click()">VIEW TODAY'S QUESTS →</button>`;
+    } catch (err) { container.innerHTML = checkinFallbackHtml(); }
+  } else { container.innerHTML = checkinFallbackHtml(); }
+}
+
+function checkinFallbackHtml() {
+  return `<div class="box"><div class="box-title">CHECK-IN COMPLETE</div><div style="font-size:13px;line-height:1.7;">Stats updated. Quests generated. Add an API key in SETTINGS to unlock the Companion AI's adaptive analysis.</div></div><button class="btn btn-block mt-16" onclick="document.querySelector('[data-tab=quests]').click()">VIEW TODAY'S QUESTS →</button>`;
+}
+
+function buildCheckinAnalysisPrompt(a) {
+  const recentCheckins = STATE.checkins.slice(-7);
+  return `Daily check-in data just submitted:\nSleep: ${a.sleep}h, quality ${a.sleepQuality}/10\nEnergy: ${a.energy}/10, Mental clarity: ${a.mental}/10, Emotional: ${a.emotional}/10\nExercised: ${a.exercised}, Learned: ${a.learned}, Reflected: ${a.reflected}, Connected: ${a.connected}\nChallenge noted: "${a.challenge||'none'}"\nToday's priority: "${a.priority||'none'}"\n\nLast 7 days of check-ins: ${JSON.stringify(recentCheckins)}\n\nCurrent streaks: sleep streak ${STATE.sleepStreak}, consistency streak ${STATE.consistencyStreak}\n\nGive a SHORT (4-6 sentences max) analysis as the Companion AI. Reference real trends if visible in the data. Be direct, warrior-monk tone, not clinical. If you notice a concerning pattern (declining sleep, isolation, stress accumulation) name it as a pattern to watch — never as a diagnosis. End with one sharp, specific piece of guidance for today.`;
+}
+
+const QUEST_POOL = {
+  main: [ { name: 'Complete strength training session', xp: 30, attr: 'vitality' }, { name: 'Deep work block (60+ min, no phone)', xp: 30, attr: 'intellect' }, { name: 'Have one honest, vulnerable conversation', xp: 30, attr: 'connection' }, { name: 'Full recovery day — no guilt', xp: 30, attr: 'resilience' } ],
+  side: [ { name: 'Read 10+ pages', xp: 15, attr: 'intellect' }, { name: 'Drink 80oz+ water', xp: 10, attr: 'vitality' }, { name: 'Message someone you care about', xp: 15, attr: 'connection' }, { name: '5 minutes of stillness/meditation', xp: 10, attr: 'spirit' }, { name: 'Write 3 things you are grateful for', xp: 10, attr: 'spirit' }, { name: 'Try one small new thing today', xp: 15, attr: 'adaptability' }, { name: 'Hit your protein target', xp: 10, attr: 'vitality' }, { name: 'Plan tomorrow before bed', xp: 10, attr: 'discipline' } ],
+};
+
+function generateDailyQuests(checkinData) {
+  const today = new Date().toDateString();
+  if (STATE.quests.date === today) return;
+  const main = QUEST_POOL.main[Math.floor(Math.random() * QUEST_POOL.main.length)];
+  const shuffled = [...QUEST_POOL.side].sort(() => Math.random() - 0.5);
+  const side = shuffled.slice(0, 3);
+  STATE.quests = { date: today, main: { ...main, completed: false }, side: side.map(s => ({ ...s, completed: false })) };
+  saveState();
+}
+
+function renderQuestsPanel() {
+  const panel = document.getElementById('panel-quests');
+  if (!STATE.quests.main) { panel.innerHTML = `<div class="section-header glow">QUESTS</div><div class="section-sub">NO ACTIVE QUESTS</div><div class="box">Complete today's check-in to generate quests.</div>`; return; }
+  const m = STATE.quests.main;
+  const sideHtml = STATE.quests.side.map((s, i) => `<div class="quest-card ${s.completed?'completed':''}"><div class="quest-checkbox" onclick="toggleSideQuest(${i})">${s.completed?'✓':''}</div><div style="flex:1;margin-left:12px;"><div class="quest-name">${s.name}</div></div><div class="quest-xp">+${s.xp} ${ATTRIBUTES[s.attr].name}</div></div>`).join('');
+  panel.innerHTML = `<div class="section-header glow">TODAY'S QUESTS</div><div class="section-sub">${STATE.quests.date}</div><div class="box" style="border-color:var(--amber);"><div class="box-title" style="color:var(--amber);">MAIN QUEST</div><div class="quest-card ${m.completed?'completed':''}" style="border-color:var(--amber);"><div class="quest-checkbox" style="border-color:var(--amber);" onclick="toggleMainQuest()">${m.completed?'✓':''}</div><div style="flex:1;margin-left:12px;"><div class="quest-name">${m.name}</div></div><div class="quest-xp">+${m.xp} ${ATTRIBUTES[m.attr].name}</div></div></div><div class="box-title mt-16">SIDE QUESTS</div>${sideHtml}`;
+}
+
+function toggleMainQuest() { const m = STATE.quests.main; m.completed = !m.completed; if (m.completed) awardXP(m.attr, m.xp, m.name); saveState(); renderQuestsPanel(); }
+function toggleSideQuest(i) { const s = STATE.quests.side[i]; s.completed = !s.completed; if (s.completed) awardXP(s.attr, s.xp, s.name); saveState(); renderQuestsPanel(); }
+
+function renderCharacterSheet() {
+  const panel = document.getElementById('panel-sheet');
+  const title = calculateTitle(STATE.attrs);
+  const lifeOS = calculateLifeOS(STATE.attrs);
+  const attrRows = Object.entries(ATTRIBUTES).map(([key, def]) => {
+    const a = STATE.attrs[key] || { xp: 0, level: 0 };
+    const prog = xpProgress(a.xp);
+    const pct = Math.round(prog.progress * 100);
+    return `<div class="attr-row" onclick="openAttrDetail('${key}')"><div class="attr-name" style="color:${def.color};">${def.name}</div><div class="attr-bar-track"><div class="attr-bar-fill" style="width:${pct}%;background:${def.color};"></div></div><div class="attr-level">LVL ${a.level}</div></div>`;
+  }).join('');
+  const sorted = Object.entries(STATE.attrs).sort((a,b)=>b[1].level-a[1].level);
+  const totalLevels = sorted.reduce((s,[,v])=>s+v.level,0) || 1;
+  const primaryClass = CLASSES.find(c => c.primary === sorted[0][0]) || CLASSES[0];
+  const secondaryKey = sorted[1] ? sorted[1][0] : null;
+  const secondaryClass = CLASSES.find(c => c.primary === secondaryKey);
+  const hybridKey1 = secondaryClass ? `${primaryClass.id}+${secondaryClass.id}` : null;
+  const hybridKey2 = secondaryClass ? `${secondaryClass.id}+${primaryClass.id}` : null;
+  const hybridName = HYBRID_CLASSES[hybridKey1] || HYBRID_CLASSES[hybridKey2] || null;
+  const primaryPct = Math.round((sorted[0][1].level / totalLevels) * 100);
+  const secondaryPct = sorted[1] ? Math.round((sorted[1][1].level / totalLevels) * 100) : 0;
+  panel.innerHTML = `<div class="section-header glow">CHARACTER SHEET</div><div class="section-sub">${title.toUpperCase()}</div><div class="box"><div class="box-title">CLASS</div><div style="font-family:var(--display);font-size:24px;" class="glow-amber">${hybridName||primaryClass.name}</div>${hybridName?`<div style="font-size:11px;color:var(--green-dim);margin-top:4px;">${primaryPct}% ${primaryClass.name} / ${secondaryPct}% ${secondaryClass.name}</div>`:`<div style="font-size:11px;color:var(--green-dim);margin-top:4px;">${primaryClass.desc}</div>`}</div><div class="box"><div class="box-title">LIFE OPERATING SYSTEM SCORE</div><div style="font-family:var(--display);font-size:32px;" class="glow-amber">${lifeOS}<span style="font-size:14px;color:var(--green-dim);"> / 1000+</span></div><div style="font-size:10px;color:var(--green-dim);margin-top:4px;">Composite power level. Rewards balance — a glass-cannon build scores lower than a well-rounded one.</div></div><div class="box-title mt-16">ATTRIBUTES</div><div class="box">${attrRows}</div><div class="box-title mt-16">STREAKS</div><div class="box" style="display:flex;gap:24px;flex-wrap:wrap;"><div><div class="label-small">CONSISTENCY</div><div style="font-size:20px;font-family:var(--display);" class="glow">${STATE.consistencyStreak}d</div></div><div><div class="label-small">SLEEP</div><div style="font-size:20px;font-family:var(--display);" class="glow">${STATE.sleepStreak}d</div></div><div><div class="label-small">BOSSES DEFEATED</div><div style="font-size:20px;font-family:var(--display);" class="glow-red">${STATE.bossesDefeated}</div></div></div>`;
+}
+
+function openAttrDetail(key) {
+  const def = ATTRIBUTES[key];
+  const a = STATE.attrs[key] || { xp: 0, level: 0 };
+  const prog = xpProgress(a.xp);
+  showModal(`<div class="box-title" style="color:${def.color};font-size:14px;">${def.name}</div><div style="font-family:var(--display);font-size:28px;margin-bottom:14px;" class="glow">LEVEL ${a.level}</div><div class="attr-bar-track mb-16"><div class="attr-bar-fill" style="width:${Math.round(prog.progress*100)}%;background:${def.color};"></div></div><div style="font-size:11px;color:var(--green-dim);margin-bottom:16px;">${a.xp} XP total — ${Math.round(prog.progress*100)}% to level ${a.level+1}</div><div class="box-title">SUBSTATS TRACKED</div><div style="font-size:12px;line-height:1.8;margin-bottom:16px;">${def.substats.join(' · ')}</div><div class="box-title">LAYER</div><div style="font-size:12px;margin-bottom:16px;">${LAYERS[def.layer].name}</div><button class="btn btn-block" onclick="closeModal()">CLOSE</button>`);
+}
+
+function checkBossTriggers() {
+  const recent = STATE.checkins.slice(-7);
+  if (recent.length < 3) return;
+  const sleepQualityAvg = avg(recent.map(c=>c.sleepQuality));
+  const sleepStreakPoor = recent.filter(c=>c.sleepQuality<6).length;
+  const emotionalAvg = avg(recent.map(c=>c.emotional));
+  const stressStreak = recent.filter(c=>c.emotional<5).length;
+  const connectionStreakLow = recent.filter(c=>!c.connected).length;
+  const learningStreakLow = recent.filter(c=>!c.learned).length;
+  const disciplineAvg = (STATE.attrs.discipline?.level||0)*5;
+  const recoveryAvg = avg(recent.map(c=>c.sleepQuality))*10;
+  const trends = { sleepQualityAvg, sleepStreakPoor, emotionalAvg, stressStreak, connectionStreakLow, learningStreakLow, disciplineAvg, recoveryAvg };
+  Object.values(BOSS_TEMPLATES).forEach(template => {
+    const alreadyActive = STATE.bosses.find(b => b.id === template.id && !b.defeated);
+    if (!alreadyActive && template.trigger(trends)) {
+      STATE.bosses.push({ id: template.id, hp: template.maxHP, maxHp: template.maxHP, defeated: false, spawnedAt: new Date().toISOString() });
+      addLegendMoment(`Boss encounter: ${template.name} has appeared`);
+    }
+  });
+  saveState();
+}
+
+function avg(arr) { const nums = arr.filter(n=>typeof n==='number'); if (!nums.length) return 5; return nums.reduce((a,b)=>a+b,0)/nums.length; }
+
+function renderBossesPanel() {
+  const panel = document.getElementById('panel-bosses');
+  const active = STATE.bosses.filter(b=>!b.defeated);
+  const defeated = STATE.bosses.filter(b=>b.defeated);
+  if (active.length === 0) {
+    panel.innerHTML = `<div class="section-header glow-red">BOSS ENCOUNTERS</div><div class="section-sub">NO ACTIVE THREATS</div><div class="box">Bosses spawn automatically when negative trends accumulate — sleep debt, isolation, stress patterns, burnout signals. Keep checking in daily; the system is watching.</div>${defeated.length?`<div class="box-title mt-16">DEFEATED (${defeated.length})</div>`+defeated.map(b=>`<div class="box" style="opacity:0.5;">☠ ${BOSS_TEMPLATES[b.id].name} — Defeated</div>`).join(''):''}`;
+    return;
+  }
+  const cards = active.map(b => {
+    const t = BOSS_TEMPLATES[b.id];
+    const pct = Math.round((b.hp/b.maxHp)*100);
+    return `<div class="boss-card"><div class="flex-between"><div style="font-family:var(--display);font-size:18px;" class="glow-red">${t.icon} ${t.name.toUpperCase()}</div><div style="font-size:11px;">${b.hp} / ${b.maxHp} HP</div></div><div class="boss-hp-track"><div class="boss-hp-fill" style="width:${pct}%;"></div></div><div class="label-small mb-8">DAMAGE ACTIONS</div><div style="display:flex;flex-wrap:wrap;gap:8px;">${t.damageActions.map(action=>`<button class="btn" style="font-size:10px;padding:6px 10px;" onclick="damageBoss('${b.id}', ${20+Math.floor(Math.random()*15)})">${action}</button>`).join('')}</div></div>`;
+  }).join('');
+  panel.innerHTML = `<div class="section-header glow-red">BOSS ENCOUNTERS</div><div class="section-sub">${active.length} ACTIVE THREAT${active.length>1?'S':''}</div>${cards}`;
+}
+
+function damageBoss(bossId, dmg) {
+  const boss = STATE.bosses.find(b=>b.id===bossId && !b.defeated);
+  if (!boss) return;
+  boss.hp = Math.max(0, boss.hp-dmg);
+  if (boss.hp === 0) { boss.defeated = true; STATE.bossesDefeated++; addLegendMoment(`Defeated boss: ${BOSS_TEMPLATES[bossId].name}`); checkAchievements(); }
+  saveState();
+  renderBossesPanel();
+}
+
+function renderSkillTreesPanel() {
+  const panel = document.getElementById('panel-skills');
+  const treesHtml = Object.entries(SKILL_TREES).map(([key, tree]) => {
+    const attrXp = (STATE.attrs[tree.attribute]?.xp) || 0;
+    const nodesHtml = tree.nodes.map(node => { const unlocked = attrXp >= node.xpReq; return `<div class="skill-node ${unlocked?'unlocked':'locked'}"><span>${unlocked?'◆':'◇'} ${node.name}</span><span style="font-size:10px;">${node.xpReq} XP</span></div>`; }).join('');
+    return `<div class="box"><div class="box-title" style="color:${ATTRIBUTES[tree.attribute].color};">${tree.name.toUpperCase()}</div>${nodesHtml}</div>`;
+  }).join('');
+  panel.innerHTML = `<div class="section-header glow">SKILL TREES</div><div class="section-sub">UNLOCKED THROUGH ATTRIBUTE XP, NOT TIME</div>${treesHtml}`;
+}
+
+function renderShadowPanel() {
+  const panel = document.getElementById('panel-shadow');
+  const activeShadows = Object.entries(ATTRIBUTES).filter(([key]) => { const a = STATE.attrs[key]; return a && a.level*5 >= ATTRIBUTES[key].shadow.threshold; });
+  const shadowHtml = activeShadows.length ? activeShadows.map(([key, def]) => `<div class="box" style="border-color:var(--purple);"><div class="box-title" style="color:${def.color};">${def.name} — SHADOW EMERGING</div><div style="font-size:12px;line-height:1.7;margin-bottom:8px;">High ${def.name.toLowerCase()} can cast a shadow. Watch for:</div><div style="font-size:12px;color:var(--purple);">${def.shadow.traits.join(' · ')}</div></div>`).join('') : `<div class="box">No dominant shadows detected yet. As attributes climb past a threshold, their shadow side will surface here. Strength always casts a shadow — the goal isn't to avoid it, it's to see it before it runs you.</div>`;
+  panel.innerHTML = `<div class="section-header glow-purple">SHADOW SYSTEM</div><div class="section-sub">EVERY STRENGTH HAS A SHADOW SIDE</div>${shadowHtml}`;
+}
+
+const LIFE_REGIONS = [
+  { icon: '🏔', name: 'Health Region', attr: 'vitality' }, { icon: '📚', name: 'Knowledge Region', attr: 'intellect' },
+  { icon: '⚔', name: 'Discipline Region', attr: 'discipline' }, { icon: '❤', name: 'Relationships Region', attr: 'connection' },
+  { icon: '🕊', name: 'Spirit Region', attr: 'spirit' }, { icon: '🌪', name: 'Resilience Region', attr: 'resilience' },
+  { icon: '🧭', name: 'Adaptability Region', attr: 'adaptability' },
+];
+
+function renderLifeMapPanel() {
+  const panel = document.getElementById('panel-map');
+  const regionsHtml = LIFE_REGIONS.map(r => { const a = STATE.attrs[r.attr] || { level: 0 }; const def = ATTRIBUTES[r.attr]; return `<div class="box" style="border-color:${def.color};"><div class="flex-between"><div style="font-size:14px;">${r.icon} ${r.name}</div><div style="font-family:var(--display);font-size:18px;color:${def.color};">LVL ${a.level}</div></div></div>`; }).join('');
+  panel.innerHTML = `<div class="section-header glow">LIFE MAP</div><div class="section-sub">YOUR TERRITORIES — EACH LEVELS INDEPENDENTLY</div>${regionsHtml}`;
+}
+
+function renderDestinyPanel() {
+  const panel = document.getElementById('panel-destiny');
+  const totalXp = Object.values(STATE.attrs).reduce((sum,a)=>sum+a.xp,0);
+  const overallLevel = xpToLevel(totalXp/7);
+  const currentStage = calculateDestinyStage(overallLevel);
+  const stagesHtml = DESTINY_STAGES.map(s => { const reached = overallLevel >= s.minLevel; const isCurrent = s.title === currentStage; return `<div class="box" style="${isCurrent?'border-color:var(--amber);background:rgba(255,211,95,0.06);':''} opacity:${reached?1:0.4};"><div class="flex-between"><div style="font-family:var(--display);font-size:16px;">${reached?'★':'☆'} ${s.title}</div><div style="font-size:10px;color:var(--green-dim);">REQUIRES LVL ${s.minLevel}</div></div></div>`; }).join('');
+  const legendHtml = STATE.history.slice(-10).reverse().map(h => `<div style="font-size:11px;color:var(--green-dim);margin-bottom:6px;">${new Date(h.date).toLocaleDateString()} — ${h.text}</div>`).join('') || '<div style="font-size:11px;color:var(--green-dim);">No legendary moments logged yet.</div>';
+  panel.innerHTML = `<div class="section-header glow">DESTINY TRACKER</div><div class="section-sub">WHO ARE YOU BECOMING?</div><div class="box" style="border-color:var(--amber);"><div class="box-title" style="color:var(--amber);">CURRENT STAGE</div><div style="font-family:var(--display);font-size:26px;" class="glow-amber">${currentStage}</div></div><div class="box-title mt-16">IDENTITY EVOLUTION PATH</div>${stagesHtml}<div class="box-title mt-16">LEGENDARY MOMENTS TIMELINE</div><div class="box">${legendHtml}</div>`;
+}
+
+async function renderFutureSelfPanel() {
+  const panel = document.getElementById('panel-future');
+  panel.innerHTML = `<div class="section-header glow">FUTURE SELF SIMULATOR</div><div class="section-sub">PROJECTING CURRENT TRAJECTORY FORWARD</div><div class="box"><div style="font-size:12px;margin-bottom:14px;">This simulation projects forward based on your actual check-in data and trends — not generic advice. Requires at least 5 check-ins for a meaningful projection.</div><button class="btn btn-block" onclick="runFutureSimulation()">RUN SIMULATION</button></div><div id="future-result"></div>`;
+}
+
+async function runFutureSimulation() {
+  const resultDiv = document.getElementById('future-result');
+  if (STATE.checkins.length < 5) { resultDiv.innerHTML = `<div class="box" style="border-color:var(--red);">Insufficient data. Complete at least 5 daily check-ins before running a projection. Currently logged: ${STATE.checkins.length}.</div>`; return; }
+  if (!STATE.apiKey) { resultDiv.innerHTML = `<div class="box" style="border-color:var(--red);">Future Self Simulator requires an API key. Add one in SETTINGS.</div>`; return; }
+  resultDiv.innerHTML = `<div class="box">Running projection<span class="boot-cursor"></span></div>`;
+  const prompt = `Based on this user's actual check-in history, project their likely trajectory if current patterns continue unchanged.\n\nCheck-in history (last ${STATE.checkins.length} entries): ${JSON.stringify(STATE.checkins.slice(-30))}\nCurrent attribute levels: ${JSON.stringify(Object.fromEntries(Object.entries(STATE.attrs).map(([k,v])=>[ATTRIBUTES[k].name,v.level])))}\nCurrent streaks: consistency ${STATE.consistencyStreak}d, sleep ${STATE.sleepStreak}d\nBosses defeated: ${STATE.bossesDefeated}\n\nProject realistically across 30 days, 90 days, and 1 year if NOTHING changes from current patterns. For each timeframe give brief, honest projections on: energy, fitness, relationships, and overall trajectory. Be direct, not motivational-poster vague. If the trend is genuinely concerning, say so plainly — this is meant to be a wake-up call tool, not flattery. If the trend is good, say that too. End with the single highest-leverage change that would most alter the 1-year outcome.\n\nKeep total response under 300 words. Use clear timeframe headers.`;
+  try {
+    const result = await callCompanionAI(prompt);
+    resultDiv.innerHTML = `<div class="box" style="border-color:var(--blue);"><div class="box-title" style="color:var(--blue);">PROJECTION — IF NOTHING CHANGES</div><div style="font-size:13px;line-height:1.75;white-space:pre-wrap;">${escapeHtml(result)}</div></div>`;
+  } catch (err) { resultDiv.innerHTML = `<div class="box" style="border-color:var(--red);">Simulation failed: ${escapeHtml(err.message)}</div>`; }
+}
+
+function renderTrendsPanel() {
+  const panel = document.getElementById('panel-trends');
+  const recent7 = STATE.checkins.slice(-7);
+  const recent30 = STATE.checkins.slice(-30);
+  if (recent7.length < 2) { panel.innerHTML = `<div class="section-header glow">TREND ANALYTICS</div><div class="section-sub">INSUFFICIENT DATA</div><div class="box">Complete more daily check-ins to unlock trend analysis. Need at least 2, currently have ${recent7.length}.</div>`; return; }
+  const metrics = ['sleepQuality','energy','mental','emotional'];
+  const labels = { sleepQuality:'SLEEP QUALITY', energy:'ENERGY', mental:'MENTAL CLARITY', emotional:'EMOTIONAL STATE' };
+  const rows7 = metrics.map(m => { const vals = recent7.map(c=>c[m]).filter(v=>typeof v==='number'); const a = avg(vals); const trend = vals.length>=2 ? (vals[vals.length-1]-vals[0]) : 0; const arrow = trend>0.5?'↑':trend<-0.5?'↓':'→'; const color = trend>0.5?'var(--green)':trend<-0.5?'var(--red)':'var(--green-dim)'; return `<div class="flex-between mb-8"><span style="font-size:11px;">${labels[m]}</span><span style="font-family:var(--display);font-size:16px;color:${color};">${a.toFixed(1)} ${arrow}</span></div>`; }).join('');
+  const sleepLearnCorr = computeCorrelationNote(recent30);
+  panel.innerHTML = `<div class="section-header glow">TREND ANALYTICS</div><div class="section-sub">7-DAY / 30-DAY / 90-DAY ROLLING ANALYSIS</div><div class="box"><div class="box-title">LAST 7 DAYS — AVERAGES & DIRECTION</div>${rows7}</div><div class="box"><div class="box-title">PATTERN NOTE</div><div style="font-size:12px;line-height:1.7;">${sleepLearnCorr}</div></div><div class="box"><div class="box-title">DATA LOGGED</div><div style="font-size:12px;">7d: ${recent7.length} check-ins · 30d: ${recent30.length} check-ins · All-time: ${STATE.checkins.length} check-ins</div></div>`;
+}
+
+function computeCorrelationNote(checkins) {
+  if (checkins.length < 5) return 'Not enough data yet to detect correlations. Keep logging daily.';
+  const goodSleepDays = checkins.filter(c=>c.sleepQuality>=7);
+  const poorSleepDays = checkins.filter(c=>c.sleepQuality<6);
+  if (goodSleepDays.length>=2 && poorSleepDays.length>=2) {
+    const goodEnergy = avg(goodSleepDays.map(c=>c.energy));
+    const poorEnergy = avg(poorSleepDays.map(c=>c.energy));
+    const diff = goodEnergy - poorEnergy;
+    if (Math.abs(diff) > 0.5) { const pct = Math.round((diff/poorEnergy)*100); return `Your energy is ${diff>0?Math.abs(pct)+'% higher':Math.abs(pct)+'% lower'} on days following quality sleep (7+) versus poor sleep nights. Sleep is your highest-leverage variable.`; }
+  }
+  return 'No strong correlations detected yet in your current data window.';
+}
+
+function renderAchievementsPanel() {
+  const panel = document.getElementById('panel-achievements');
+  const html = ACHIEVEMENTS.map(a => { const unlocked = STATE.achievements.includes(a.id); return `<div class="achievement ${unlocked?'unlocked':'locked'}"><div class="achievement-icon">${unlocked?'🏆':'🔒'}</div><div><div style="font-size:13px;">${a.name}</div><div style="font-size:10px;color:var(--green-dim);">${a.desc}</div></div></div>`; }).join('');
+  panel.innerHTML = `<div class="section-header glow">ACHIEVEMENTS</div><div class="section-sub">${STATE.achievements.length} / ${ACHIEVEMENTS.length} UNLOCKED</div>${html}`;
+}
+
+function renderSettingsPanel() {
+  const panel = document.getElementById('panel-settings');
+  panel.innerHTML = `<div class="section-header glow">SETTINGS</div><div class="section-sub">SYSTEM CONFIGURATION</div><div class="box" style="border-color:var(--amber);"><div class="box-title" style="color:var(--amber);">⚠ SAVE YOUR PROGRESS</div><div style="font-size:11px;color:var(--green-dim);margin-bottom:10px;">If you're viewing this through a preview/share link, your browser may not remember your progress between visits. Copy your backup code below and save it somewhere (Notes app works). Paste it back in next time to restore.</div><button class="btn btn-block" onclick="showBackupModal()">📋 COPY BACKUP CODE</button><div style="height:8px;"></div><button class="btn btn-block" onclick="showRestoreModal()">📥 PASTE BACKUP CODE</button></div><div class="box"><div class="box-title">ANTHROPIC API KEY</div><div style="font-size:11px;color:var(--green-dim);margin-bottom:10px;">Required for Companion AI analysis, check-in insights, and Future Self Simulator. Stored locally in this browser only.</div><input type="password" id="settings-api-key" placeholder="sk-ant-..." value="${STATE.apiKey||''}" /><button class="btn btn-block mt-16" onclick="saveSettingsApiKey()">SAVE KEY</button></div><div class="box"><div class="box-title">DATA</div><div style="font-size:11px;color:var(--green-dim);margin-bottom:10px;">All data is stored locally in this browser. Nothing is sent anywhere except API calls to Anthropic for analysis.</div><button class="btn btn-block" style="border-color:var(--red);color:var(--red);" onclick="confirmResetAll()">⚠ RESET ALL DATA</button></div><div class="box"><div class="box-title">ABOUT</div><div style="font-size:11px;line-height:1.7;color:var(--green-dim);">ASCENSION ENGINE v2.7<br/>Separate from Throne Ascension (training-specific).<br/>This is your Life Operating System.</div></div>`;
+}
+
+function showBackupModal() {
+  const dataStr = JSON.stringify(STATE);
+  showModal(`<div class="box-title" style="color:var(--amber);">YOUR BACKUP CODE</div><div style="font-size:11px;color:var(--green-dim);margin-bottom:12px;">Tap the box below to select all, then copy it. Paste it into Notes or a message to yourself so you don't lose it.</div><textarea id="backup-text-display" rows="8" style="font-size:10px;" readonly onclick="this.focus();this.select();">${dataStr}</textarea><button class="btn btn-block mt-16" onclick="copyBackupText()">COPY TO CLIPBOARD</button><button class="btn btn-block mt-16" onclick="closeModal()">CLOSE</button>`);
+}
+
+function copyBackupText() {
+  const textarea = document.getElementById('backup-text-display');
+  textarea.focus();
+  textarea.select();
+  try {
+    navigator.clipboard.writeText(textarea.value).then(() => {
+      alert("Copied. Paste it into Notes or a message now so it's saved somewhere safe.");
+    }).catch(() => {
+      document.execCommand('copy');
+      alert("Copied. Paste it into Notes or a message now so it's saved somewhere safe.");
+    });
+  } catch (e) {
+    document.execCommand('copy');
+    alert("Copied. Paste it into Notes or a message now so it's saved somewhere safe.");
+  }
+}
+
+function showRestoreModal() {
+  showModal(`<div class="box-title" style="color:var(--amber);">PASTE BACKUP CODE</div><div style="font-size:11px;color:var(--green-dim);margin-bottom:12px;">Paste your saved backup code below, then tap Restore.</div><textarea id="restore-text-input" rows="8" style="font-size:10px;" placeholder="Paste your backup code here..."></textarea><button class="btn btn-block mt-16" onclick="restoreFromText()">RESTORE</button><button class="btn btn-block mt-16" onclick="closeModal()">CANCEL</button>`);
+}
+
+function restoreFromText() {
+  const text = document.getElementById('restore-text-input').value.trim();
+  if (!text) { alert('Paste your backup code first.'); return; }
+  try {
+    const loaded = JSON.parse(text);
+    if (!loaded.attrs) throw new Error('Invalid backup');
+    STATE = { ...STATE, ...loaded };
+    saveState();
+    refreshTopbar();
+    closeModal();
+    alert('Restored successfully.');
+    renderSettingsPanel();
+  } catch (err) {
+    alert('That doesn\'t look like a valid backup code. Make sure you copied the entire thing.');
+  }
+}
+
+function saveSettingsApiKey() { const key = document.getElementById('settings-api-key').value.trim(); STATE.apiKey = key; saveApiKey(key); saveState(); alert('API key saved.'); }
+
+function confirmResetAll() {
+  showModal(`<div class="box-title" style="color:var(--red);">CONFIRM RESET</div><div style="font-size:13px;margin-bottom:20px;">This will permanently erase all character progress, check-ins, quests, and history. This cannot be undone.</div><div style="display:flex;gap:10px;"><button class="btn" style="flex:1;" onclick="closeModal()">CANCEL</button><button class="btn" style="flex:1;border-color:var(--red);color:var(--red);" onclick="resetAllData()">ERASE EVERYTHING</button></div>`);
+}
+
+function resetAllData() { localStorage.removeItem(STORAGE_KEY); closeModal(); location.reload(); }
+
+const COMPANION_SYSTEM_PROMPT = `You are the Companion AI inside ASCENSION ENGINE — a Life RPG operating system. You act as Quest Master, Coach, Analyst, Strategist, and Historian for the user.\n\nYou are encouraging but truthful. You praise earned progress. You identify weaknesses directly. You prioritize growth over comfort. Your tone is grounded, warrior-monk, direct — never clinical, never generic motivational filler.\n\nCRITICAL BOUNDARY: You may identify behavioral PATTERNS (sleep debt, isolation trends, stress accumulation, declining engagement) but you must NEVER assign a clinical diagnosis or use diagnostic labels like "depression" or "anxiety disorder." Name patterns, not conditions. If a pattern looks serious, say "this is worth a real conversation with someone" rather than naming a condition.\n\nKeep responses tight and specific — reference the actual numbers/data given to you, not generic advice.`;
+
+async function callCompanionAI(userPrompt) {
+  if (!STATE.apiKey) throw new Error('No API key configured');
+  const res = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'x-api-key': STATE.apiKey, 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' },
+    body: JSON.stringify({ model: 'claude-sonnet-4-20250514', max_tokens: 800, system: COMPANION_SYSTEM_PROMPT, messages: [{ role: 'user', content: userPrompt }] }),
+  });
+  const data = await res.json();
+  if (data.error) throw new Error(data.error.message || 'API error');
+  return (data.content || []).map(b => b.text || '').join('');
+}
+
+function escapeHtml(str) { const div = document.createElement('div'); div.textContent = str || ''; return div.innerHTML; }
+
+function buildPanelShells() {
+  const content = document.getElementById('content');
+  const panelIds = ['checkin','sheet','quests','bosses','skills','shadow','map','destiny','future','trends','achievements','settings'];
+  content.innerHTML = panelIds.map(id => `<div class="panel ${id==='checkin'?'active':''}" id="panel-${id}"></div>`).join('');
+}
+
+function init() {
+  const hadState = loadState();
+  if (!hadState) STATE.attrs = initAttrs();
+  STATE.apiKey = STATE.apiKey || loadApiKey();
+  buildPanelShells();
+  setupTabs();
+  runBootSequence(() => {
+    document.getElementById('main-app').classList.add('visible');
+    refreshTopbar();
+    renderCheckinPanel();
+  });
+}
+
+window.addEventListener('DOMContentLoaded', init);
+</script>
+</body>
+</html>

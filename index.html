@@ -406,6 +406,102 @@ input[type="range"]::-webkit-slider-thumb {
   max-height: 80vh;
   overflow-y: auto;
 }
+
+/* VOW BANNER */
+.vow-banner {
+  border: 1px solid var(--amber);
+  background: rgba(255,211,95,0.05);
+  padding: 12px 14px;
+  margin-bottom: 16px;
+  cursor: pointer;
+}
+.vow-label {
+  font-size: 9px;
+  letter-spacing: 2px;
+  color: var(--amber);
+  text-transform: uppercase;
+  margin-bottom: 4px;
+}
+.vow-text {
+  font-size: 12px;
+  color: var(--green);
+  font-style: italic;
+  line-height: 1.5;
+}
+.vow-empty {
+  font-size: 11px;
+  color: var(--green-dim);
+}
+
+/* VOICE BUTTON */
+.voice-btn {
+  background: transparent;
+  border: 1px solid var(--blue);
+  color: var(--blue);
+  font-family: var(--mono);
+  font-size: 10px;
+  padding: 6px 10px;
+  cursor: pointer;
+  margin-top: 8px;
+}
+.voice-btn.recording {
+  border-color: var(--red);
+  color: var(--red);
+  animation: blink 1s step-end infinite;
+}
+
+/* COUNCIL */
+.council-card {
+  border: 1px solid var(--green-dim);
+  background: var(--panel-bg);
+  padding: 12px;
+  margin-bottom: 10px;
+  display: flex;
+  gap: 12px;
+}
+.council-icon {
+  font-size: 22px;
+  flex-shrink: 0;
+}
+.council-name {
+  font-size: 10px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  margin-bottom: 4px;
+}
+.council-line {
+  font-size: 12px;
+  font-style: italic;
+  color: var(--text, var(--green));
+  line-height: 1.5;
+}
+
+/* MYTHIC LOG */
+.mythic-text {
+  font-size: 13px;
+  line-height: 1.8;
+  font-style: italic;
+  color: var(--cream, var(--green));
+  white-space: pre-wrap;
+}
+
+/* SHADOW CONFRONT */
+.shadow-confront-track {
+  height: 6px;
+  background: rgba(199,143,255,0.15);
+  margin: 10px 0 8px;
+}
+.shadow-confront-fill {
+  height: 100%;
+  background: var(--purple);
+  transition: width 0.4s ease;
+}
+.shadow-confront-label {
+  font-size: 9px;
+  color: var(--purple);
+  letter-spacing: 1px;
+  margin-bottom: 6px;
+}
 </style>
 </head>
 <body>
@@ -552,6 +648,7 @@ let STATE = {
   apiKey: '', attrs: {}, quests: { main: null, side: [], date: null }, checkins: [], bosses: [],
   bossesDefeated: 0, achievements: [], skillUnlocks: {}, history: [], consistencyStreak: 0,
   sleepStreak: 0, learningCount: 0, majorGoalsCompleted: 0, lastCheckinDate: null, companionMemory: [],
+  vow: '', freezeUsedThisWeek: false, freezeWeekStart: null, shadowConfronts: {},
 };
 
 function initAttrs() {
@@ -709,13 +806,27 @@ function renderCheckinPanel() {
   const panel = document.getElementById('panel-checkin');
   const today = new Date().toDateString();
   const alreadyDone = STATE.lastCheckinDate === today;
+  const vowHtml = STATE.vow
+    ? `<div class="vow-banner" onclick="showVowModal()"><div class="vow-label">The Vow</div><div class="vow-text">"${escapeHtml(STATE.vow)}"</div></div>`
+    : `<div class="vow-banner" onclick="showVowModal()"><div class="vow-label">The Vow</div><div class="vow-empty">Tap to write the one sentence you're becoming. Pin it here.</div></div>`;
   if (alreadyDone) {
-    panel.innerHTML = `<div class="section-header glow">DAILY CHECK-IN</div><div class="section-sub">STATUS: COMPLETE FOR TODAY</div><div class="box"><div class="box-title">SYSTEM</div><div style="font-size:13px;line-height:1.7;">Check-in logged. Character sheet updated. Return tomorrow for the next interview — or review today's quests in the QUESTS tab.</div></div><button class="btn" onclick="resetTodayCheckin()">⟲ RE-RUN CHECK-IN (DEBUG)</button>`;
+    panel.innerHTML = `${vowHtml}<div class="section-header glow">DAILY CHECK-IN</div><div class="section-sub">STATUS: COMPLETE FOR TODAY</div><div class="box"><div class="box-title">SYSTEM</div><div style="font-size:13px;line-height:1.7;">Check-in logged. Character sheet updated. Return tomorrow for the next interview — or review today's quests in the QUESTS tab.</div></div><button class="btn" onclick="resetTodayCheckin()">⟲ RE-RUN CHECK-IN (DEBUG)</button>`;
     return;
   }
   checkinStep = 0; checkinAnswers = {};
-  panel.innerHTML = `<div class="section-header glow">MORNING INTERVIEW</div><div class="section-sub">ADAPTIVE ASSESSMENT — EST. 2-5 MINUTES</div><div id="checkin-container"></div>`;
+  panel.innerHTML = `${vowHtml}<div class="section-header glow">MORNING INTERVIEW</div><div class="section-sub">ADAPTIVE ASSESSMENT — EST. 2-5 MINUTES</div><div id="checkin-container"></div>`;
   renderCheckinStep();
+}
+
+function showVowModal() {
+  showModal(`<div class="box-title" style="color:var(--amber);">THE VOW</div><div style="font-size:11px;color:var(--green-dim);margin-bottom:12px;">One sentence. Who you're becoming. This pins to the top of every check-in.</div><textarea id="vow-input" rows="3" placeholder="I am becoming a man who...">${escapeHtml(STATE.vow)}</textarea><button class="btn btn-block mt-16" onclick="saveVow()">SAVE THE VOW</button><button class="btn btn-block mt-16" onclick="closeModal()">CLOSE</button>`);
+}
+
+function saveVow() {
+  STATE.vow = document.getElementById('vow-input').value.trim();
+  saveState();
+  closeModal();
+  renderCheckinPanel();
 }
 
 function renderCheckinStep() {
@@ -733,7 +844,7 @@ function renderCheckinStep() {
   } else if (q.type === 'bool') {
     inputHtml = `<div class="mb-16" style="font-size:13px;">${q.label}</div><div style="display:flex;gap:10px;"><button class="btn" style="flex:1;" onclick="checkinAnswers['${q.id}']=true;nextCheckinStep();">YES</button><button class="btn" style="flex:1;" onclick="checkinAnswers['${q.id}']=false;nextCheckinStep();">NO</button></div>`;
   } else if (q.type === 'text') {
-    inputHtml = `<div class="mb-16" style="font-size:13px;">${q.label}</div><textarea id="checkin-text-input" rows="3" placeholder="Type here..."></textarea>`;
+    inputHtml = `<div class="mb-16" style="font-size:13px;">${q.label}</div><textarea id="checkin-text-input" rows="3" placeholder="Type here..."></textarea><button type="button" class="voice-btn" id="voice-btn-${q.id}" onclick="startVoiceInput('checkin-text-input', '${q.id}')">🎙 SPEAK INSTEAD</button>`;
   }
   container.innerHTML = `<div class="box"><div class="box-title">QUESTION ${checkinStep+1} / ${CHECKIN_QUESTIONS.length}</div>${inputHtml}${q.type!=='bool'?`<button class="btn btn-block mt-16" onclick="submitCheckinStep('${q.id}','${q.type}')">CONTINUE →</button>`:''}</div>`;
   if (q.type === 'slider' && !(q.id in checkinAnswers)) checkinAnswers[q.id] = q.default;
@@ -742,6 +853,38 @@ function renderCheckinStep() {
 function submitCheckinStep(id, type) {
   if (type === 'text') checkinAnswers[id] = document.getElementById('checkin-text-input').value || '';
   nextCheckinStep();
+}
+
+function startVoiceInput(textareaId, btnSuffix) {
+  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SpeechRecognition) {
+    alert('Voice input is not supported in this browser. Type your answer instead.');
+    return;
+  }
+  const btn = document.getElementById('voice-btn-' + btnSuffix);
+  const textarea = document.getElementById(textareaId);
+  const recognition = new SpeechRecognition();
+  recognition.lang = 'en-US';
+  recognition.interimResults = false;
+  recognition.maxAlternatives = 1;
+  btn.classList.add('recording');
+  btn.textContent = '🎙 LISTENING...';
+  recognition.start();
+  recognition.onresult = (event) => {
+    const transcript = event.results[0][0].transcript;
+    textarea.value = textarea.value ? textarea.value + ' ' + transcript : transcript;
+    btn.classList.remove('recording');
+    btn.textContent = '🎙 SPEAK INSTEAD';
+  };
+  recognition.onerror = () => {
+    btn.classList.remove('recording');
+    btn.textContent = '🎙 SPEAK INSTEAD';
+    alert('Could not hear that — try again or type instead.');
+  };
+  recognition.onend = () => {
+    btn.classList.remove('recording');
+    btn.textContent = '🎙 SPEAK INSTEAD';
+  };
 }
 function nextCheckinStep() { checkinStep++; renderCheckinStep(); }
 function resetTodayCheckin() { STATE.lastCheckinDate = null; saveState(); renderCheckinPanel(); }
@@ -757,7 +900,33 @@ async function processCheckin() {
   if (a.emotional >= 7) awardXP('resilience', 10, 'Emotional stability');
   if (a.mental >= 7) awardXP('intellect', 5, 'Mental clarity');
   STATE.sleepStreak = a.sleepQuality >= 6 ? STATE.sleepStreak + 1 : 0;
-  STATE.consistencyStreak = STATE.lastCheckinDate ? STATE.consistencyStreak + 1 : 1;
+
+  // STREAK FREEZE — one grace day per week protects the consistency streak
+  const now = new Date();
+  const weekStart = new Date(now);
+  weekStart.setDate(now.getDate() - now.getDay());
+  const weekStartStr = weekStart.toDateString();
+  if (STATE.freezeWeekStart !== weekStartStr) {
+    STATE.freezeWeekStart = weekStartStr;
+    STATE.freezeUsedThisWeek = false;
+  }
+  if (STATE.lastCheckinDate) {
+    const lastDate = new Date(STATE.lastCheckinDate);
+    const lastMidnight = new Date(lastDate.getFullYear(), lastDate.getMonth(), lastDate.getDate());
+    const todayMidnight = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const dayGap = Math.round((todayMidnight - lastMidnight) / (1000 * 60 * 60 * 24));
+    if (dayGap <= 1) {
+      STATE.consistencyStreak += 1;
+    } else if (dayGap === 2 && !STATE.freezeUsedThisWeek) {
+      STATE.freezeUsedThisWeek = true;
+      STATE.consistencyStreak += 1;
+      addLegendMoment('Streak freeze used — one missed day forgiven, streak protected.');
+    } else {
+      STATE.consistencyStreak = 1;
+    }
+  } else {
+    STATE.consistencyStreak = 1;
+  }
   STATE.lastCheckinDate = today;
   STATE.checkins.push({ date: today, ...a });
   if (STATE.checkins.length > 90) STATE.checkins.shift();
@@ -829,7 +998,20 @@ function renderCharacterSheet() {
   const hybridName = HYBRID_CLASSES[hybridKey1] || HYBRID_CLASSES[hybridKey2] || null;
   const primaryPct = Math.round((sorted[0][1].level / totalLevels) * 100);
   const secondaryPct = sorted[1] ? Math.round((sorted[1][1].level / totalLevels) * 100) : 0;
-  panel.innerHTML = `<div class="section-header glow">CHARACTER SHEET</div><div class="section-sub">${title.toUpperCase()}</div><div class="box"><div class="box-title">CLASS</div><div style="font-family:var(--display);font-size:24px;" class="glow-amber">${hybridName||primaryClass.name}</div>${hybridName?`<div style="font-size:11px;color:var(--green-dim);margin-top:4px;">${primaryPct}% ${primaryClass.name} / ${secondaryPct}% ${secondaryClass.name}</div>`:`<div style="font-size:11px;color:var(--green-dim);margin-top:4px;">${primaryClass.desc}</div>`}</div><div class="box"><div class="box-title">LIFE OPERATING SYSTEM SCORE</div><div style="font-family:var(--display);font-size:32px;" class="glow-amber">${lifeOS}<span style="font-size:14px;color:var(--green-dim);"> / 1000+</span></div><div style="font-size:10px;color:var(--green-dim);margin-top:4px;">Composite power level. Rewards balance — a glass-cannon build scores lower than a well-rounded one.</div></div><div class="box-title mt-16">ATTRIBUTES</div><div class="box">${attrRows}</div><div class="box-title mt-16">STREAKS</div><div class="box" style="display:flex;gap:24px;flex-wrap:wrap;"><div><div class="label-small">CONSISTENCY</div><div style="font-size:20px;font-family:var(--display);" class="glow">${STATE.consistencyStreak}d</div></div><div><div class="label-small">SLEEP</div><div style="font-size:20px;font-family:var(--display);" class="glow">${STATE.sleepStreak}d</div></div><div><div class="label-small">BOSSES DEFEATED</div><div style="font-size:20px;font-family:var(--display);" class="glow-red">${STATE.bossesDefeated}</div></div></div>`;
+  panel.innerHTML = `<div class="section-header glow">CHARACTER SHEET</div><div class="section-sub">${title.toUpperCase()}</div><div class="box"><div class="box-title">CLASS</div><div style="font-family:var(--display);font-size:24px;" class="glow-amber">${hybridName||primaryClass.name}</div>${hybridName?`<div style="font-size:11px;color:var(--green-dim);margin-top:4px;">${primaryPct}% ${primaryClass.name} / ${secondaryPct}% ${secondaryClass.name}</div>`:`<div style="font-size:11px;color:var(--green-dim);margin-top:4px;">${primaryClass.desc}</div>`}</div><div class="box"><div class="box-title">LIFE OPERATING SYSTEM SCORE</div><div style="font-family:var(--display);font-size:32px;" class="glow-amber">${lifeOS}<span style="font-size:14px;color:var(--green-dim);"> / 1000+</span></div><div style="font-size:10px;color:var(--green-dim);margin-top:4px;">Composite power level. Rewards balance — a glass-cannon build scores lower than a well-rounded one.</div></div><div class="box-title mt-16">ATTRIBUTES</div><div class="box">${attrRows}</div><div class="box-title mt-16">STREAKS</div><div class="box" style="display:flex;gap:24px;flex-wrap:wrap;"><div><div class="label-small">CONSISTENCY</div><div style="font-size:20px;font-family:var(--display);" class="glow">${STATE.consistencyStreak}d</div></div><div><div class="label-small">SLEEP</div><div style="font-size:20px;font-family:var(--display);" class="glow">${STATE.sleepStreak}d</div></div><div><div class="label-small">BOSSES DEFEATED</div><div style="font-size:20px;font-family:var(--display);" class="glow-red">${STATE.bossesDefeated}</div></div></div><div class="box-title mt-16">THE COUNCIL</div>${renderCouncilHtml()}`;
+}
+
+function renderCouncilHtml() {
+  const sorted = Object.entries(STATE.attrs).sort((a,b)=>b[1].level-a[1].level);
+  const highest = sorted[0];
+  const lowest = sorted[sorted.length - 1];
+  const highName = highest ? ATTRIBUTES[highest[0]].name : 'nothing yet';
+  const lowName = lowest ? ATTRIBUTES[lowest[0]].name : 'nothing yet';
+  const lowLevel = lowest ? lowest[1].level : 0;
+  const strategistLine = STATE.consistencyStreak >= 7 ? `Seven days of consistency compounds faster than any single great effort. Don't break the chain for excitement.` : `You don't need a plan today. You need one action that proves yesterday's words were true.`;
+  const monkLine = (lowLevel === 0 && lowest) ? `${lowName} sits untouched. The parts of you that go quiet the longest are usually the ones asking loudest to be heard.` : `Stillness is not the absence of progress. It's where progress gets tested for what it's actually made of.`;
+  const warriorLine = (highest && highest[1].level >= 5) ? `${highName} is strong. Strength unchecked becomes the thing that breaks you — watch its shadow.` : `Discomfort today is interest paid in advance on the life you're building. Don't run from the bill.`;
+  return `<div class="council-card"><div class="council-icon">♟️</div><div><div class="council-name" style="color:var(--blue);">The Strategist</div><div class="council-line">${strategistLine}</div></div></div><div class="council-card"><div class="council-icon">🕊️</div><div><div class="council-name" style="color:var(--purple);">The Monk</div><div class="council-line">${monkLine}</div></div></div><div class="council-card"><div class="council-icon">⚔️</div><div><div class="council-name" style="color:var(--red);">The Warrior</div><div class="council-line">${warriorLine}</div></div></div>`;
 }
 
 function openAttrDetail(key) {
@@ -901,8 +1083,21 @@ function renderSkillTreesPanel() {
 function renderShadowPanel() {
   const panel = document.getElementById('panel-shadow');
   const activeShadows = Object.entries(ATTRIBUTES).filter(([key]) => { const a = STATE.attrs[key]; return a && a.level*5 >= ATTRIBUTES[key].shadow.threshold; });
-  const shadowHtml = activeShadows.length ? activeShadows.map(([key, def]) => `<div class="box" style="border-color:var(--purple);"><div class="box-title" style="color:${def.color};">${def.name} — SHADOW EMERGING</div><div style="font-size:12px;line-height:1.7;margin-bottom:8px;">High ${def.name.toLowerCase()} can cast a shadow. Watch for:</div><div style="font-size:12px;color:var(--purple);">${def.shadow.traits.join(' · ')}</div></div>`).join('') : `<div class="box">No dominant shadows detected yet. As attributes climb past a threshold, their shadow side will surface here. Strength always casts a shadow — the goal isn't to avoid it, it's to see it before it runs you.</div>`;
+  const shadowHtml = activeShadows.length ? activeShadows.map(([key, def]) => {
+    const confronts = STATE.shadowConfronts[key] || 0;
+    const shrinkPct = Math.min(90, confronts * 15);
+    const remainingPct = 100 - shrinkPct;
+    return `<div class="box" style="border-color:var(--purple);"><div class="box-title" style="color:${def.color};">${def.name} — SHADOW EMERGING</div><div style="font-size:12px;line-height:1.7;margin-bottom:8px;">High ${def.name.toLowerCase()} can cast a shadow. Watch for:</div><div style="font-size:12px;color:var(--purple);">${def.shadow.traits.join(' · ')}</div><div class="shadow-confront-label mt-16">SHADOW WEAKENED ${shrinkPct}% — confront it ${confronts} time${confronts===1?'':'s'}</div><div class="shadow-confront-track"><div class="shadow-confront-fill" style="width:${remainingPct}%;"></div></div><button class="btn btn-block mt-16" onclick="confrontShadow('${key}')">I SEE IT. NAME IT.</button></div>`;
+  }).join('') : `<div class="box">No dominant shadows detected yet. As attributes climb past a threshold, their shadow side will surface here. Strength always casts a shadow — the goal isn't to avoid it, it's to see it before it runs you.</div>`;
   panel.innerHTML = `<div class="section-header glow-purple">SHADOW SYSTEM</div><div class="section-sub">EVERY STRENGTH HAS A SHADOW SIDE</div>${shadowHtml}`;
+}
+
+function confrontShadow(key) {
+  STATE.shadowConfronts[key] = (STATE.shadowConfronts[key] || 0) + 1;
+  addLegendMoment(`Confronted the shadow of ${ATTRIBUTES[key].name} — named it instead of feeding it.`);
+  awardXP('resilience', 10, 'Shadow confronted');
+  saveState();
+  renderShadowPanel();
 }
 
 const LIFE_REGIONS = [
@@ -925,7 +1120,34 @@ function renderDestinyPanel() {
   const currentStage = calculateDestinyStage(overallLevel);
   const stagesHtml = DESTINY_STAGES.map(s => { const reached = overallLevel >= s.minLevel; const isCurrent = s.title === currentStage; return `<div class="box" style="${isCurrent?'border-color:var(--amber);background:rgba(255,211,95,0.06);':''} opacity:${reached?1:0.4};"><div class="flex-between"><div style="font-family:var(--display);font-size:16px;">${reached?'★':'☆'} ${s.title}</div><div style="font-size:10px;color:var(--green-dim);">REQUIRES LVL ${s.minLevel}</div></div></div>`; }).join('');
   const legendHtml = STATE.history.slice(-10).reverse().map(h => `<div style="font-size:11px;color:var(--green-dim);margin-bottom:6px;">${new Date(h.date).toLocaleDateString()} — ${h.text}</div>`).join('') || '<div style="font-size:11px;color:var(--green-dim);">No legendary moments logged yet.</div>';
-  panel.innerHTML = `<div class="section-header glow">DESTINY TRACKER</div><div class="section-sub">WHO ARE YOU BECOMING?</div><div class="box" style="border-color:var(--amber);"><div class="box-title" style="color:var(--amber);">CURRENT STAGE</div><div style="font-family:var(--display);font-size:26px;" class="glow-amber">${currentStage}</div></div><div class="box-title mt-16">IDENTITY EVOLUTION PATH</div>${stagesHtml}<div class="box-title mt-16">LEGENDARY MOMENTS TIMELINE</div><div class="box">${legendHtml}</div>`;
+  panel.innerHTML = `<div class="section-header glow">DESTINY TRACKER</div><div class="section-sub">WHO ARE YOU BECOMING?</div><div class="box" style="border-color:var(--amber);"><div class="box-title" style="color:var(--amber);">CURRENT STAGE</div><div style="font-family:var(--display);font-size:26px;" class="glow-amber">${currentStage}</div></div><div class="box-title mt-16">IDENTITY EVOLUTION PATH</div>${stagesHtml}<div class="box-title mt-16">LEGENDARY MOMENTS TIMELINE</div><div class="box">${legendHtml}</div><div class="box-title mt-16">THE MYTHIC LOG</div><div class="box"><div style="font-size:12px;color:var(--green-dim);margin-bottom:12px;">Turn your real history into the story it actually is.</div><button class="btn btn-block" onclick="runMythicNarration()">NARRATE THE SAGA</button><div id="mythic-result" class="mt-16"></div></div>`;
+}
+
+async function runMythicNarration() {
+  const resultDiv = document.getElementById('mythic-result');
+  if (STATE.history.length < 1) {
+    resultDiv.innerHTML = `<div style="font-size:12px;color:var(--green-dim);">No moments logged yet. Complete quests, defeat bosses, confront shadows — then return.</div>`;
+    return;
+  }
+  if (STATE.apiKey) {
+    resultDiv.innerHTML = `<div style="font-size:12px;">Writing the saga<span class="boot-cursor"></span></div>`;
+    const recent = STATE.history.slice(-15);
+    const prompt = `Turn this person's real recorded history into a short mythic narration — 150 words max, second person ("You..."), sparse and epic like a saga, not flowery. Base it only on these real events, don't invent fake ones:\n\n${recent.map(h => `- ${h.text}`).join('\n')}\n\nWrite it as if recording the deeds of a warrior-monk. No generic fantasy clichés. Ground it in the actual events given.`;
+    try {
+      const result = await callCompanionAI(prompt);
+      resultDiv.innerHTML = `<div class="mythic-text">${escapeHtml(result)}</div>`;
+    } catch (err) {
+      resultDiv.innerHTML = templateMythicLog();
+    }
+  } else {
+    resultDiv.innerHTML = templateMythicLog();
+  }
+}
+
+function templateMythicLog() {
+  const recent = STATE.history.slice(-5).reverse();
+  const lines = recent.map(h => `The record shows: ${h.text}`).join('<br/>');
+  return `<div class="mythic-text">The saga continues, written in deeds rather than words.<br/><br/>${lines}<br/><br/>Add an API key in Settings for the Companion AI to narrate this properly.</div>`;
 }
 
 async function renderFutureSelfPanel() {
@@ -954,7 +1176,31 @@ function renderTrendsPanel() {
   const labels = { sleepQuality:'SLEEP QUALITY', energy:'ENERGY', mental:'MENTAL CLARITY', emotional:'EMOTIONAL STATE' };
   const rows7 = metrics.map(m => { const vals = recent7.map(c=>c[m]).filter(v=>typeof v==='number'); const a = avg(vals); const trend = vals.length>=2 ? (vals[vals.length-1]-vals[0]) : 0; const arrow = trend>0.5?'↑':trend<-0.5?'↓':'→'; const color = trend>0.5?'var(--green)':trend<-0.5?'var(--red)':'var(--green-dim)'; return `<div class="flex-between mb-8"><span style="font-size:11px;">${labels[m]}</span><span style="font-family:var(--display);font-size:16px;color:${color};">${a.toFixed(1)} ${arrow}</span></div>`; }).join('');
   const sleepLearnCorr = computeCorrelationNote(recent30);
-  panel.innerHTML = `<div class="section-header glow">TREND ANALYTICS</div><div class="section-sub">7-DAY / 30-DAY / 90-DAY ROLLING ANALYSIS</div><div class="box"><div class="box-title">LAST 7 DAYS — AVERAGES & DIRECTION</div>${rows7}</div><div class="box"><div class="box-title">PATTERN NOTE</div><div style="font-size:12px;line-height:1.7;">${sleepLearnCorr}</div></div><div class="box"><div class="box-title">DATA LOGGED</div><div style="font-size:12px;">7d: ${recent7.length} check-ins · 30d: ${recent30.length} check-ins · All-time: ${STATE.checkins.length} check-ins</div></div>`;
+  panel.innerHTML = `<div class="section-header glow">TREND ANALYTICS</div><div class="section-sub">7-DAY / 30-DAY / 90-DAY ROLLING ANALYSIS</div><div class="box"><div class="box-title">LAST 7 DAYS — AVERAGES & DIRECTION</div>${rows7}</div><div class="box"><div class="box-title">PATTERN NOTE</div><div style="font-size:12px;line-height:1.7;">${sleepLearnCorr}</div></div><div class="box"><div class="box-title">DATA LOGGED</div><div style="font-size:12px;">7d: ${recent7.length} check-ins · 30d: ${recent30.length} check-ins · All-time: ${STATE.checkins.length} check-ins</div></div><div class="box-title mt-16">MONTHLY RECAP</div><div class="box"><div style="font-size:12px;color:var(--green-dim);margin-bottom:12px;">A season summary of who you were this month.</div><button class="btn btn-block" onclick="runMonthlyRecap()">GENERATE RECAP</button><div id="recap-result" class="mt-16"></div></div>`;
+}
+
+async function runMonthlyRecap() {
+  const resultDiv = document.getElementById('recap-result');
+  const recent30 = STATE.checkins.slice(-30);
+  if (recent30.length < 5) {
+    resultDiv.innerHTML = `<div style="font-size:12px;color:var(--green-dim);">Need at least 5 check-ins logged for a meaningful recap. Currently: ${recent30.length}.</div>`;
+    return;
+  }
+  if (!STATE.apiKey) {
+    const avgSleep = avg(recent30.map(c=>c.sleepQuality));
+    const avgEnergy = avg(recent30.map(c=>c.energy));
+    const exercisedDays = recent30.filter(c=>c.exercised).length;
+    resultDiv.innerHTML = `<div class="mythic-text">Over the last ${recent30.length} check-ins: average sleep quality ${avgSleep.toFixed(1)}/10, average energy ${avgEnergy.toFixed(1)}/10, trained ${exercisedDays} of those days, ${STATE.bossesDefeated} bosses defeated total.<br/><br/>Add an API key in Settings for a fuller Companion AI recap.</div>`;
+    return;
+  }
+  resultDiv.innerHTML = `<div style="font-size:12px;">Compiling the season<span class="boot-cursor"></span></div>`;
+  const prompt = `Write a monthly recap for this person based on their last ${recent30.length} daily check-ins. Data: ${JSON.stringify(recent30)}\n\nCurrent streaks: consistency ${STATE.consistencyStreak}d, sleep ${STATE.sleepStreak}d. Bosses defeated: ${STATE.bossesDefeated}. Achievements unlocked: ${STATE.achievements.length}.\n\nWrite this like a season recap — what was true this month, what shifted, what stayed stuck. Direct, warrior-monk tone, not motivational filler. Reference real numbers. End with one specific thing to carry into next month. Under 200 words.`;
+  try {
+    const result = await callCompanionAI(prompt);
+    resultDiv.innerHTML = `<div class="mythic-text">${escapeHtml(result)}</div>`;
+  } catch (err) {
+    resultDiv.innerHTML = `<div style="font-size:12px;color:var(--red);">Recap failed: ${escapeHtml(err.message)}</div>`;
+  }
 }
 
 function computeCorrelationNote(checkins) {
